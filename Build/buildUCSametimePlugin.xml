@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+
+<project default="zipPlugin" basedir="../">
+
+	<loadproperties srcFile="Build/sametime.properties" />
+
+	<property name="plugin.version" value="${plugin.version}" />
+	<property name="old.version" value="${old.version}" />
+	
+	<property name="zip.name" value="eSDK_UC_Sametime_Plugin_V${plugin.version}.zip" />
+
+	<property name="release.dir" value="../00.Release" />
+
+	<property name="SametimePlugin_dir" value="source\SametimePlugin" />
+	<property name="uc_server_src_dir" value="${SametimePlugin_dir}\esdk_uc_sdk4j_jna" />
+	<property name="plugin_src_dir" value="${SametimePlugin_dir}\com.huawei.esdk.uc.sametime" />
+	<property name="update.dir" value="${SametimePlugin_dir}\com.huawei.esdk.uc.sametime.update" />
+	
+	<property name="ucservice_copy_bat" value="copy_dependent_files.bat" />
+	<property name="ucservice_compile_bat" value="Release_full_amount_compile_all.bat" />
+	
+	<tstamp>
+		<format property="TODAY" pattern="yyyy-MM-dd" locale="cn" />
+	</tstamp>
+
+	<target name="clean">
+		<delete quiet="true" includeEmptyDirs="true">
+			<fileset dir="${TODAY}" includes="**/*" />
+		</delete>
+		<ant antfile="buildjar.xml" dir="${uc_server_src_dir}" target="clean" />
+		<ant antfile="build_proj.xml" dir="${plugin_src_dir}" target="clean"/>
+		<ant antfile="pluginbuild.xml" dir="${update.dir}" target="clean"/>
+		<delete dir="source/build" />
+	</target>
+
+	<target name="ucservice_copy">  
+		<exec dir="${SametimePlugin_dir}" executable="cmd.exe" >      
+			<arg line="/c ${ucservice_copy_bat}" />  			
+			<arg line="/c exit" />   
+		</exec>   
+	</target>
+	
+	<target name="ucservice_compile" depends="ucservice_copy">  
+		<exec dir="${SametimePlugin_dir}" executable="cmd.exe" >   
+			<arg line="/c ${ucservice_compile_bat}" />  			
+			<arg line="/c exit" />   
+		</exec>   
+	</target>
+	
+	<target name="init" depends="clean, ucservice_compile">
+	
+		<ant antfile="buildjar.xml" dir="${uc_server_src_dir}" />
+		<ant antfile="pluginbuild.xml" dir="${update.dir}"/>
+	</target>
+
+	<target name="zipPlugin" depends="init" description="zip final plugin update project">
+
+		<zip destfile="${release.dir}/${TODAY}/${zip.name}">
+			<fileset dir="${update.dir}">
+				<exclude name=".project" />
+				<exclude name="pluginbuild.xml" />
+			</fileset>
+		</zip>
+	</target>
+
+</project>
